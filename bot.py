@@ -1,9 +1,10 @@
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext
+from telegram.ext import Updater, CommandHandler, CallbackContext, Dispatcher
 import subprocess
 import time
 import threading
 import psutil  # For network stats
+from flask import Flask, request
 
 # Hardcoded Telegram bot token
 TELEGRAM_BOT_TOKEN = "7792939487:AAHSPiFtuKa8bBmkBrsYKgFVfpoHWHu9Nfg"
@@ -19,6 +20,9 @@ attack_active = False
 start_time = 0
 duration = 0
 chat_id = None
+
+# Flask app for webhook
+app = Flask(__name__)
 
 def is_approved(chat_id):
     """Check if the user is approved."""
@@ -161,20 +165,25 @@ def approve(update: Update, context: CallbackContext):
     except Exception as e:
         update.message.reply_text(f"❌ Error: {str(e)}")
 
-def main():
-    # Set up the Telegram bot
-    updater = Updater(TELEGRAM_BOT_TOKEN)
-    dispatcher = updater.dispatcher
+# Set up the Telegram bot
+updater = Updater(TELEGRAM_BOT_TOKEN)
+dispatcher = updater.dispatcher
 
-    # Add command handlers
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("attack", attack))
-    dispatcher.add_handler(CommandHandler("stop", stop))
-    dispatcher.add_handler(CommandHandler("approve", approve))
+# Add command handlers
+dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(CommandHandler("attack", attack))
+dispatcher.add_handler(CommandHandler("stop", stop))
+dispatcher.add_handler(CommandHandler("approve", approve))
 
-    # Start the bot
-    updater.start_polling()
-    updater.idle()
+# Webhook route
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), updater.bot)
+    dispatcher.process_update(update)
+    return 'ok'
 
+# Start the Flask app
 if __name__ == "__main__":
-    main()
+    # Set the webhook URL (replace with your Northflank service URL)
+    updater.bot.set_webhook(url="https://p01--udpstressbot--l2l8rltzslf9.code.run/webhook")
+    app.run(host="0.0.0.0", port=8080)
