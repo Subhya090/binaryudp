@@ -87,7 +87,7 @@ def run_attack(ip, port, duration, update):
     # Send real-time updates
     while time.time() < end_time and attack_active:
         time_remaining = int(end_time - time.time())
-        progress = int(((time.time() - start_time) / duration * 100)
+        progress = int((time.time() - start_time) / duration * 100)  # Fixed syntax error
         status_bar = get_status_bar(progress)
 
         # Calculate Mbps rate
@@ -185,5 +185,5 @@ def webhook():
 # Start the Flask app
 if __name__ == "__main__":
     # Set the webhook URL (replace with your Northflank service URL)
-    updater.bot.set_webhook(url="https://p01--udpstressbot--l2l8rltzslf9.code.run/webhook")
+    updater.bot.set_webhook(url="https://your-northflank-service-url/webhook")
     app.run(host="0.0.0.0", port=8080)
