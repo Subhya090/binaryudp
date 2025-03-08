@@ -4,7 +4,6 @@ import subprocess
 import time
 import threading
 import psutil  # For network stats
-from flask import Flask, request
 
 # Hardcoded Telegram bot token
 TELEGRAM_BOT_TOKEN = "7792939487:AAHSPiFtuKa8bBmkBrsYKgFVfpoHWHu9Nfg"
@@ -20,9 +19,6 @@ attack_active = False
 start_time = 0
 duration = 0
 chat_id = None
-
-# Flask app for webhook
-app = Flask(__name__)
 
 def is_approved(chat_id):
     """Check if the user is approved."""
@@ -174,15 +170,6 @@ application.add_handler(CommandHandler("attack", attack))
 application.add_handler(CommandHandler("stop", stop))
 application.add_handler(CommandHandler("approve", approve))
 
-# Webhook route
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    update = Update.de_json(request.get_json(force=True), application.bot)
-    application.process_update(update)
-    return 'ok'
-
-# Start the Flask app
+# Start polling
 if __name__ == "__main__":
-    # Set the webhook URL (replace with your Northflank service URL)
-    application.bot.set_webhook(url="https://p01--newudp--xh6dz8t6wg5q.code.run/webhook")
-    app.run(host="0.0.0.0", port=8080)
+    application.run_polling()
