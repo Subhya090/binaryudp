@@ -15,7 +15,7 @@ RUN python3 -m venv /app/venv
 # Activate the virtual environment and install Python packages
 ENV PATH="/app/venv/bin:$PATH"
 RUN pip install --upgrade pip && \
-    pip install python-telegram-bot psutil flask
+    pip install python-telegram-bot psutil
 
 # Copy the sharp.c file and compile it
 COPY sharp.c /app/sharp.c
@@ -27,9 +27,6 @@ COPY bot.py /app/bot.py
 
 # Set the working directory
 WORKDIR /app
-
-# Expose port 8080 for the Flask app
-EXPOSE 8080
 
 # Set the entrypoint to run the bot
 ENTRYPOINT ["python3", "bot.py"]
