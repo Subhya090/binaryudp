@@ -28,5 +28,8 @@ COPY bot.py /app/bot.py
 # Set the working directory
 WORKDIR /app
 
+# Expose port 8080 for the Flask app
+EXPOSE 8080
+
 # Set the entrypoint to run the bot
 ENTRYPOINT ["python3", "bot.py"]
