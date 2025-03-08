@@ -184,5 +184,5 @@ def webhook():
 # Start the Flask app
 if __name__ == "__main__":
     # Set the webhook URL (replace with your Northflank service URL)
-    application.bot.set_webhook(url="https://your-northflank-service-url/webhook")
+    application.bot.set_webhook(url="https://p01--newudp--xh6dz8t6wg5q.code.run/webhook")
     app.run(host="0.0.0.0", port=8080)
