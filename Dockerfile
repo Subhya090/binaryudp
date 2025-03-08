@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies for the Telegram bot
-RUN pip3 install python-telegram-bot psutil
+RUN pip3 install python-telegram-bot psutil flask
 
 # Copy the sharp.c file and compile it
 COPY sharp.c /app/sharp.c
