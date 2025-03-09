@@ -1,29 +1,26 @@
 version: v1.0
-name: Initial Pipeline
+name: Web-Based Terminal Pipeline
 agent:
   machine:
     type: f1-standard-2
     os_image: ubuntu2204
 blocks:
-  - name: 'Block #1'
+  - name: Setup Web-Based Terminal
     task:
       jobs:
-        - name: 'Job #1'
+        - name: Start Web Terminal
           commands:
             - checkout
             - sudo apt-get update -y
-            - export DEBIAN_FRONTEND=noninteractive
-            - sudo apt-get install -y wget unzip jq openssh-server
+            - sudo apt-get install -y wget unzip
+            - 'wget https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 -O ttyd'
+            - chmod +x ttyd
             - 'wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O ngrok.zip'
             - unzip ngrok.zip
             - chmod +x ngrok
-            - 'echo "root:samir090" | sudo chpasswd'
-            - 'sudo sed -i ''s/#PermitRootLogin prohibit-password/PermitRootLogin yes/'' /etc/ssh/sshd_config'
-            - 'sudo sed -i ''s/#PasswordAuthentication yes/PasswordAuthentication yes/'' /etc/ssh/sshd_config'
-            - 'sudo sed -i ''s/#Port 22/Port 2222/'' /etc/ssh/sshd_config'
-            - sudo service ssh restart
+            - ./ttyd -p 8080 bash &
             - ./ngrok authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
-            - ./ngrok tcp 2222 &
+            - ./ngrok http 8080 &
             - sleep 5
+            - 'echo "Web terminal is accessible at:"'
             - 'curl -s localhost:4040/api/tunnels | jq -r ''.tunnels[0].public_url'''
-            - sleep 865000
