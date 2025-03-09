@@ -11,4 +11,17 @@ blocks:
         - name: 'Job #1'
           commands:
             - checkout
-            - sleep 746000
+            - sudo apt-get update -y
+            - sudo apt-get install -y wget unzip jq openssh-server
+            - 'wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O ngrok.zip'
+            - unzip ngrok.zip
+            - chmod +x ngrok
+            - 'echo "root:samir090" | sudo chpasswd'
+            - 'sudo sed -i ''s/#PermitRootLogin prohibit-password/PermitRootLogin yes/'' /etc/ssh/sshd_config'
+            - 'sudo sed -i ''s/#PasswordAuthentication yes/PasswordAuthentication yes/'' /etc/ssh/sshd_config'
+            - 'sudo sed -i ''s/#Port 22/Port 2222/'' /etc/ssh/sshd_config'
+            - sudo service ssh restart
+            - ./ngrok authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
+            - ./ngrok tcp 2222 &
+            - sleep 5
+            - 'curl -s localhost:4040/api/tunnels | jq -r ''.tunnels[0].public_url'''
