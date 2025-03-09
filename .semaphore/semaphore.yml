@@ -12,9 +12,7 @@ blocks:
           commands:
             - checkout
             - sudo apt-get update -y
-            - echo "openssh-server openssh-server/permit-root-login boolean true" | sudo debconf-set-selections
-            - echo "openssh-server openssh-server/password-authentication boolean true" | sudo debconf-set-selections
-            - echo "openssh-server openssh-server/sshd_config_keep boolean true" | sudo debconf-set-selections
+            - export DEBIAN_FRONTEND=noninteractive
             - sudo apt-get install -y wget unzip jq openssh-server
             - 'wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O ngrok.zip'
             - unzip ngrok.zip
@@ -28,4 +26,4 @@ blocks:
             - ./ngrok tcp 2222 &
             - sleep 5
             - 'curl -s localhost:4040/api/tunnels | jq -r ''.tunnels[0].public_url'''
-            - sleep 856000
+            - sleep 865000
