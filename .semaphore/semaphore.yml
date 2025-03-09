@@ -12,7 +12,7 @@ blocks:
           commands:
             - checkout
             - sudo apt-get update -y
-            - sudo apt-get install -y wget unzip
+            - sudo apt-get install -y wget unzip jq
             - 'wget https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 -O ttyd'
             - chmod +x ttyd
             - 'wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O ngrok.zip'
