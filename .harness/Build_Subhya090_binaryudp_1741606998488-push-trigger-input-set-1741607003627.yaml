@@ -1,0 +1,14 @@
+inputSet:
+  name: Build_Subhya090_binaryudp_1741606998488-push-trigger-input-set
+  identifier: Build_Subhya090_binaryudp_1741606998488pushtriggerinputset
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipeline:
+    identifier: Build_Subhya090_binaryudp_1741606998488
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: <+trigger.branch>
