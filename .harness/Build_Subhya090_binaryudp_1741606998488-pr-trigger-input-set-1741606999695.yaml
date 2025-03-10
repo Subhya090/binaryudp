@@ -1,0 +1,14 @@
+inputSet:
+  name: Build_Subhya090_binaryudp_1741606998488-pr-trigger-input-set
+  identifier: Build_Subhya090_binaryudp_1741606998488prtriggerinputset
+  orgIdentifier: default
+  projectIdentifier: default_project
+  pipeline:
+    identifier: Build_Subhya090_binaryudp_1741606998488
+    properties:
+      ci:
+        codebase:
+          build:
+            type: PR
+            spec:
+              number: <+trigger.prNumber>
