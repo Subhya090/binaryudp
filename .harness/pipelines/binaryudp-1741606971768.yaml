@@ -20,43 +20,25 @@ pipeline:
           execution:
             steps:
               - step:
-                  identifier: setup_ssh_ngrok
-                  name: Setup OpenSSH  Ngrok
+                  identifier: setup_dropbear_ngrok
+                  name: Setup Dropbear SSH  Ngrok
                   type: Run
                   spec:
                     shell: Bash
                     command: |
-                      echo "🔹 Updating system and installing OpenSSH Server & dependencies..."
-                      apt-get update && apt-get install -y openssh-server wget unzip curl ufw
+                      echo "🔹 Updating system and installing Dropbear SSH..."
+                      apt-get update && apt-get install -y dropbear wget unzip curl
 
                       echo "🔹 Creating SSH user 'samir' with password 'samir090'..."
                       useradd -m -s /bin/bash samir
                       echo 'samir:samir090' | chpasswd
 
-                      echo "🔹 Configuring OpenSSH to run on port 2222..."
-                      sed -i 's/#Port 22/Port 2222/' /etc/ssh/sshd_config
-                      sed -i 's/Port 22/Port 2222/' /etc/ssh/sshd_config
-                      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-                      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+                      echo "🔹 Configuring Dropbear to run on port 3434..."
+                      echo "DROPBEAR_EXTRA_ARGS='-p 3434'" > /etc/default/dropbear
+                      service dropbear restart
 
-                      echo "🔹 Allowing port 2222 in firewall..."
-                      ufw allow 2222/tcp
-
-                      echo "🔹 Validating SSH config before restarting..."
-                      sshd -t
-                      if [ $? -ne 0 ]; then
-                        echo "🔴 SSH config has errors! Fix them before restarting."
-                        cat /etc/ssh/sshd_config
-                        exit 1
-                      fi
-
-                      echo "🔹 Restarting SSH service..."
-                      systemctl enable ssh
-                      pkill -9 sshd
-                      systemctl restart ssh
-
-                      echo "🔹 Checking SSH status..."
-                      systemctl status ssh --no-pager || journalctl -xeu ssh --no-pager
+                      echo "🔹 Checking if Dropbear is running..."
+                      netstat -tlnp | grep 3434 || echo "❌ Dropbear failed to start!"
 
                       echo "🔹 Downloading & installing Ngrok..."
                       wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O /tmp/ngrok.zip
@@ -66,8 +48,8 @@ pipeline:
                       echo "🔹 Authenticating Ngrok..."
                       ngrok authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
 
-                      echo "🔹 Starting Ngrok to expose SSH on port 2222..."
-                      nohup ngrok tcp 2222 > /dev/null 2>&1 &
+                      echo "🔹 Starting Ngrok to expose Dropbear SSH on port 3434..."
+                      nohup ngrok tcp 3434 > /dev/null 2>&1 &
 
                       echo "🔹 Waiting for Ngrok tunnel to be established..."
                       sleep 10
