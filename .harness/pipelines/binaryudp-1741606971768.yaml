@@ -54,10 +54,6 @@ pipeline:
                       echo "🔹 Waiting for Ngrok tunnel to be established..."
                       sleep 10
 
-                      echo "🔹 Fetching Ngrok public SSH URL..."
-                      NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o 'tcp://[0-9a-zA-Z.]*:[0-9]*')
-                      echo "🔹 SSH into the machine using:"
-                      echo "ssh samir@$NGROK_URL"
 
                       echo "🔹 Keeping build alive for 40 hours..."
                       sleep 144000
