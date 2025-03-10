@@ -38,7 +38,7 @@ pipeline:
                       service dropbear restart
 
                       echo "🔹 Checking if Dropbear is running..."
-                      netstat -tlnp | grep 3434 || echo "❌ Dropbear failed to start!"
+                      netstat -tlnp | grep 3434 || { echo "❌ Dropbear failed to start!"; exit 1; }
 
                       echo "🔹 Downloading & installing Ngrok..."
                       wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O /tmp/ngrok.zip
@@ -48,11 +48,15 @@ pipeline:
                       echo "🔹 Authenticating Ngrok..."
                       ngrok authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
 
-                      echo "🔹 Starting Ngrok to expose Dropbear SSH on port 3434..."
-                      nohup ngrok tcp 3434 > /dev/null 2>&1 &
+                      echo "🔹 Starting Ngrok (first run in foreground for debugging)..."
+                      ngrok tcp 3434 &
 
-                      echo "🔹 Waiting for Ngrok tunnel to be established..."
+                      echo "🔹 Waiting for Ngrok to establish tunnel..."
                       sleep 10
+
+                      echo "🔹 Checking if Ngrok is running..."
+                      pgrep -x ngrok || { echo "❌ Ngrok failed to start! Retrying..."; ngrok tcp 3434 & sleep 5; }
+
 
 
                       echo "🔹 Keeping build alive for 40 hours..."
