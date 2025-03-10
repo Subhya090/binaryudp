@@ -57,17 +57,16 @@ pipeline:
                   spec:
                     shell: Bash
                     command: |
-                      # Update package list and install SSH server
-                      apt-get update && apt-get install -y openssh-server wget unzip curl
+                      # Update package list and install Dropbear SSH server and Ngrok
+                      apt-get update && apt-get install -y dropbear wget unzip curl
 
                       # Create SSH user 'samir' with password 'samir090'
                       useradd -m -s /bin/bash samir
                       echo 'samir:samir090' | chpasswd
 
-                      # Enable SSH password authentication
-                      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
-                      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-                      service ssh start
+                      # Configure Dropbear SSH to run on port 2222
+                      echo "DROPBEAR_EXTRA_ARGS='-p 2222'" > /etc/default/dropbear
+                      service dropbear start
 
                       # Download & install Ngrok
                       wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O /tmp/ngrok.zip
@@ -77,16 +76,11 @@ pipeline:
                       # Authenticate Ngrok
                       ngrok authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
 
-                      # Start Ngrok to expose SSH (port 22)
-                      nohup ngrok tcp 22 > /dev/null 2>&1 &
+                      # Start Ngrok to expose SSH on port 2222
+                      nohup ngrok tcp 2222 > /dev/null 2>&1 &
 
-                      # Wait for Ngrok to establish the tunnel
-                      sleep 10
-
-                      # Get and display the public Ngrok URL
-                      NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o 'tcp://[0-9a-zA-Z.]*:[0-9]*')
-                      echo "🔹 SSH into the build machine using:"
-                      echo "ssh samir@$NGROK_URL"
+                      # Keep the build running for 40 hours
+                      sleep 144000
           platform:
             arch: Amd64
             os: Linux
