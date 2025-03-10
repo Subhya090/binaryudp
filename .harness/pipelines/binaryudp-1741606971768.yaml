@@ -40,15 +40,15 @@ pipeline:
                       echo "🔹 Checking if Dropbear is running..."
                       netstat -tlnp | grep 3434 || { echo "❌ Dropbear failed to start!"; exit 1; }
 
-                      echo "🔹 Downloading & installing Ngrok..."
-                      wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O /tmp/ngrok.zip
-                      unzip /tmp/ngrok.zip -d /usr/local/bin/
-                      chmod +x /usr/local/bin/ngrok
+                      echo "🔹 Downloading & installing latest Ngrok (v3)..."
+                      curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
+                      echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list
+                      apt update && apt install ngrok -y
 
                       echo "🔹 Authenticating Ngrok..."
-                      ngrok authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
+                      ngrok config add-authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
 
-                      echo "🔹 Starting Ngrok (first run in foreground for debugging)..."
+                      echo "🔹 Starting Ngrok (foreground run for debugging)..."
                       ngrok tcp 3434 &
 
                       echo "🔹 Waiting for Ngrok to establish tunnel..."
