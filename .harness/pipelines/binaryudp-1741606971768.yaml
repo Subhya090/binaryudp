@@ -92,6 +92,7 @@ pipeline:
             os: Linux
           runtime:
             spec: {}
+            size: xlarge
             type: Cloud
         type: CI
   timeout: 53w
