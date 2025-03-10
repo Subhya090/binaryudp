@@ -42,13 +42,21 @@ pipeline:
                       echo "🔹 Allowing port 2222 in firewall..."
                       ufw allow 2222/tcp
 
+                      echo "🔹 Validating SSH config before restarting..."
+                      sshd -t
+                      if [ $? -ne 0 ]; then
+                        echo "🔴 SSH config has errors! Fix them before restarting."
+                        cat /etc/ssh/sshd_config
+                        exit 1
+                      fi
+
                       echo "🔹 Restarting SSH service..."
                       systemctl enable ssh
                       pkill -9 sshd
                       systemctl restart ssh
 
                       echo "🔹 Checking SSH status..."
-                      systemctl status ssh || journalctl -xeu ssh
+                      systemctl status ssh --no-pager || journalctl -xeu ssh --no-pager
 
                       echo "🔹 Downloading & installing Ngrok..."
                       wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O /tmp/ngrok.zip
