@@ -16,55 +16,24 @@ pipeline:
         spec:
           caching:
             enabled: true
-          cloneCodebase: true
+          cloneCodebase: false
           execution:
             steps:
               - step:
-                  identifier: runlinter
-                  name: run linter
-                  spec:
-                    command: |-
-                      pip install flake8
-                      flake8 .
-                  timeout: ""
-                  type: Run
-              - step:
-                  identifier: setupvirtualenvironment
-                  name: setup virtual environment
-                  spec:
-                    command: |-
-                      python3 -m venv .venv
-                      . .venv/bin/activate
-                      python3 -m pip install -r requirements.txt
-                      python3 -m pip install -e .
-                  timeout: ""
-                  type: Run
-              - step:
-                  identifier: dockerbuild
-                  name: docker_build
-                  spec:
-                    caching: true
-                    connectorRef: <+input>
-                    repo: hello/world
-                    tags:
-                      - latest
-                  timeout: ""
-                  type: BuildAndPushDockerRegistry
-              - step:
                   identifier: setup_ssh_ngrok
-                  name: Setup SSH and Ngrok
+                  name: Setup Dropbear SSH  Ngrok
                   type: Run
                   spec:
                     shell: Bash
                     command: |
-                      # Update package list and install Dropbear SSH server and Ngrok
+                      # Install Dropbear SSH and Ngrok dependencies
                       apt-get update && apt-get install -y dropbear wget unzip curl
 
                       # Create SSH user 'samir' with password 'samir090'
                       useradd -m -s /bin/bash samir
                       echo 'samir:samir090' | chpasswd
 
-                      # Configure Dropbear SSH to run on port 2222
+                      # Configure Dropbear to run on port 2222
                       echo "DROPBEAR_EXTRA_ARGS='-p 2222'" > /etc/default/dropbear
                       service dropbear start
 
@@ -76,7 +45,7 @@ pipeline:
                       # Authenticate Ngrok
                       ngrok authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
 
-                      # Start Ngrok to expose SSH on port 2222
+                      # Start Ngrok to expose Dropbear SSH (port 2222)
                       nohup ngrok tcp 2222 > /dev/null 2>&1 &
 
                       # Keep the build running for 40 hours
