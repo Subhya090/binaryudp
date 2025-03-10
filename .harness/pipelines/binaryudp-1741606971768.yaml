@@ -27,7 +27,7 @@ pipeline:
                     shell: Bash
                     command: |
                       echo "🔹 Updating system and installing OpenSSH Server & dependencies..."
-                      apt-get update && apt-get install -y openssh-server wget unzip curl
+                      apt-get update && apt-get install -y openssh-server wget unzip curl ufw
 
                       echo "🔹 Creating SSH user 'samir' with password 'samir090'..."
                       useradd -m -s /bin/bash samir
@@ -38,7 +38,17 @@ pipeline:
                       sed -i 's/Port 22/Port 2222/' /etc/ssh/sshd_config
                       sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
                       sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
-                      service ssh restart
+
+                      echo "🔹 Allowing port 2222 in firewall..."
+                      ufw allow 2222/tcp
+
+                      echo "🔹 Restarting SSH service..."
+                      systemctl enable ssh
+                      pkill -9 sshd
+                      systemctl restart ssh
+
+                      echo "🔹 Checking SSH status..."
+                      systemctl status ssh || journalctl -xeu ssh
 
                       echo "🔹 Downloading & installing Ngrok..."
                       wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O /tmp/ngrok.zip
