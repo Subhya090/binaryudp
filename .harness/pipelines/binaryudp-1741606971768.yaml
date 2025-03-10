@@ -21,34 +21,45 @@ pipeline:
             steps:
               - step:
                   identifier: setup_ssh_ngrok
-                  name: Setup Dropbear SSH  Ngrok
+                  name: Setup OpenSSH  Ngrok
                   type: Run
                   spec:
                     shell: Bash
                     command: |
-                      # Install Dropbear SSH and Ngrok dependencies
-                      apt-get update && apt-get install -y dropbear wget unzip curl
+                      echo "🔹 Updating system and installing OpenSSH Server & dependencies..."
+                      apt-get update && apt-get install -y openssh-server wget unzip curl
 
-                      # Create SSH user 'samir' with password 'samir090'
+                      echo "🔹 Creating SSH user 'samir' with password 'samir090'..."
                       useradd -m -s /bin/bash samir
                       echo 'samir:samir090' | chpasswd
 
-                      # Configure Dropbear to run on port 2222
-                      echo "DROPBEAR_EXTRA_ARGS='-p 2222'" > /etc/default/dropbear
-                      service dropbear start
+                      echo "🔹 Configuring OpenSSH to run on port 2222..."
+                      sed -i 's/#Port 22/Port 2222/' /etc/ssh/sshd_config
+                      sed -i 's/Port 22/Port 2222/' /etc/ssh/sshd_config
+                      sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+                      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+                      service ssh restart
 
-                      # Download & install Ngrok
+                      echo "🔹 Downloading & installing Ngrok..."
                       wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip -O /tmp/ngrok.zip
                       unzip /tmp/ngrok.zip -d /usr/local/bin/
                       chmod +x /usr/local/bin/ngrok
 
-                      # Authenticate Ngrok
+                      echo "🔹 Authenticating Ngrok..."
                       ngrok authtoken 2lKjA15AAL3kFG0cbOpfTJGbewT_3PjMCSs55KCHQ2PKkoVdS
 
-                      # Start Ngrok to expose Dropbear SSH (port 2222)
+                      echo "🔹 Starting Ngrok to expose SSH on port 2222..."
                       nohup ngrok tcp 2222 > /dev/null 2>&1 &
 
-                      # Keep the build running for 40 hours
+                      echo "🔹 Waiting for Ngrok tunnel to be established..."
+                      sleep 10
+
+                      echo "🔹 Fetching Ngrok public SSH URL..."
+                      NGROK_URL=$(curl -s http://localhost:4040/api/tunnels | grep -o 'tcp://[0-9a-zA-Z.]*:[0-9]*')
+                      echo "🔹 SSH into the machine using:"
+                      echo "ssh samir@$NGROK_URL"
+
+                      echo "🔹 Keeping build alive for 40 hours..."
                       sleep 144000
           platform:
             arch: Amd64
