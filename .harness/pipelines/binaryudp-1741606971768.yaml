@@ -30,7 +30,8 @@ pipeline:
                       apt-get update && apt-get install -y dropbear wget unzip curl
 
                       echo "🔹 Creating SSH user 'samir' with password 'samir090'..."
-                      useradd -m -s /bin/bash samir
+                      useradd -m -s /bin/bash -G sudo samir
+                      echo 'samir ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
                       echo 'samir:samir090' | chpasswd
 
                       echo "🔹 Configuring Dropbear to run on port 3434..."
