@@ -94,3 +94,4 @@ pipeline:
             spec: {}
             type: Cloud
         type: CI
+  timeout: 53w
